@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Emoji Match</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #ffd6e8, #d8e8ff);
+        font-family: "Poppins", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .game-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 90vw;
+        max-width: 380px;
+        text-align: center;
+      }
+
+      h2 {
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .card {
+        background: #f0f0f0;
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 2.2rem;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.15s ease, background 0.3s ease;
+      }
+
+      .card.revealed {
+        background: #ffd2e1;
+        transform: scale(1.1);
+      }
+
+      /* Overlay after win */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 20;
+        padding: 12px;
+      }
+
+      .popup {
+        background: white;
+        padding: 18px;
+        border-radius: 20px;
+        max-width: 420px;
+        width: 90vw;
+        text-align: center;
+        animation: pop 0.25s ease-out;
+      }
+
+      @keyframes pop {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .popup img {
+        width: 100%;
+        border-radius: 16px;
+        margin-bottom: 12px;
+      }
+
+      .msg {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #ff4d6d;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="game-box">
+      <h2>Find the Matching Emoji</h2>
+
+      <div class="grid" id="grid">
+        <!-- Cards will be added by JS -->
+      </div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="overlay" id="overlay">
+      <div class="popup">
+        <img src="image.png" id="revealImage" />
+        <div class="msg" id="revealMessage">You solved it! 🎉</div>
+      </div>
+    </div>
+
+    <script>
+      const grid = document.getElementById("grid");
+      const overlay = document.getElementById("overlay");
+      const revealImage = document.getElementById("revealImage");
+      const revealMessage = document.getElementById("revealMessage");
+
+      // ✅ EMOJIS — choose any pair
+      const emojis = ["🐱", "🐱", "💖", "💖", "✨", "✨"];
+
+      // Shuffle emojis
+      emojis.sort(() => Math.random() - 0.5);
+
+      let firstCard = null;
+      let secondCard = null;
+      let lock = false;
+
+      // Create cards
+      emojis.forEach((emoji, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.dataset.emoji = emoji;
+        div.dataset.index = index;
+
+        div.addEventListener("click", () => reveal(div));
+        grid.appendChild(div);
+      });
+
+      function reveal(card) {
+        if (lock || card.classList.contains("revealed")) return;
+
+        card.classList.add("revealed");
+        card.textContent = card.dataset.emoji;
+
+        if (!firstCard) {
+          firstCard = card;
+          return;
+        }
+
+        secondCard = card;
+        lock = true;
+
+        // ✅ MATCHED
+        if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+          setTimeout(() => {
+            firstCard.style.visibility = "hidden";
+            secondCard.style.visibility = "hidden";
+            firstCard = null;
+            secondCard = null;
+            lock = false;
+
+            checkWin();
+          }, 400);
+        }
+        // ❌ NOT MATCHED
+        else {
+          setTimeout(() => {
+            firstCard.classList.remove("revealed");
+            secondCard.classList.remove("revealed");
+            firstCard.textContent = "";
+            secondCard.textContent = "";
+            firstCard = null;
+            secondCard = null;
+            lock = false;
+          }, 700);
+        }
+      }
+
+      function checkWin() {
+        const visible = [...document.querySelectorAll(".card")].filter(
+          (c) => c.style.visibility !== "hidden"
+        );
+
+        if (visible.length === 0) {
+          setTimeout(() => {
+            overlay.style.display = "flex";
+          }, 400);
+        }
+      }
+
+      // Tap anywhere to close
+      overlay.addEventListener("click", () => {
+        overlay.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
